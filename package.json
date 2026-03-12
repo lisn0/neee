@@ -1,0 +1,27 @@
+{
+  "name": "easy-fevir-mvp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "tsx server/index.ts",
+    "dev:full": "concurrently -n api,web -c auto \"npm run dev:api\" \"npm run dev\"",
+    "build": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.server.json && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0"
+  }
+}
