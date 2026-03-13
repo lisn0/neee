@@ -1,123 +1,137 @@
 # Easy FEvIR MVP
 
-This workspace now contains a minimal React + TypeScript prototype for the Easy FEvIR MVP plus a tiny local API with optional OpenAI-backed extraction.
+Easy FEvIR is a small React + TypeScript prototype for AI-assisted FEvIR-style evidence authoring.
 
-Architecture and next-stage design live in:
+It takes one source document, extracts a structured recommendation draft, shows grounding snippets for each field, and lets a reviewer approve, edit, regenerate, save, and export the result.
 
-- [easy-fevir-architecture.md](/Users/bilelUser/ness/easy-fevir-architecture.md)
-- [easy-fevir-roadmap.md](/Users/bilelUser/ness/easy-fevir-roadmap.md)
+## What It Does
 
-## Goal
-
-The app demonstrates the core workflow:
-
-- load one concrete source document
-- extract 8 FEvIR-oriented draft fields
-- review each field with source grounding
-- approve, edit, or regenerate individual fields
-- assemble a live recommendation draft
+- extract 8 FEvIR-oriented draft fields from one source
+- show source-grounded snippets for each field
+- support approve, edit, and field-level regenerate
+- save and load drafts through a local backend API
 - export the current draft as JSON
+- fall back to a heuristic extractor when no OpenAI API key is configured
 
-## App structure
+## Stack
 
-- [index.html](/Users/bilelUser/ness/index.html)
-- [package.json](/Users/bilelUser/ness/package.json)
-- [src/App.tsx](/Users/bilelUser/ness/src/App.tsx)
-- [src/components/SourcePanel.tsx](/Users/bilelUser/ness/src/components/SourcePanel.tsx)
-- [src/components/FieldReviewPanel.tsx](/Users/bilelUser/ness/src/components/FieldReviewPanel.tsx)
-- [src/components/RecommendationDraftPanel.tsx](/Users/bilelUser/ness/src/components/RecommendationDraftPanel.tsx)
-- [src/styles.css](/Users/bilelUser/ness/src/styles.css)
-- [src/lib/draftApi.ts](/Users/bilelUser/ness/src/lib/draftApi.ts)
-- [server/index.ts](/Users/bilelUser/ness/server/index.ts)
-- [server/draft-store.ts](/Users/bilelUser/ness/server/draft-store.ts)
-- [server/extraction-service.ts](/Users/bilelUser/ness/server/extraction-service.ts)
-- [server/openai-extractor.ts](/Users/bilelUser/ness/server/openai-extractor.ts)
-- [shared/easy-fevir-engine.ts](/Users/bilelUser/ness/shared/easy-fevir-engine.ts)
-- [shared/easy-fevir-drafts.ts](/Users/bilelUser/ness/shared/easy-fevir-drafts.ts)
+- React 19
+- TypeScript
+- Vite
+- Node.js HTTP API
+- OpenAI Responses API for structured extraction
+- file-backed draft persistence for the current prototype
 
-## Demo source
+## Requirements
 
-The prototype loads a PRECLUDE-based example drawn from the FEvIR Primer materials so the app is immediately showable without extra setup.
+- Node.js 20+
+- npm
 
-## Run locally
-
-From `/Users/bilelUser/ness`:
+## Quick Start
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev:full
 ```
 
 This starts:
 
-- the React/Vite frontend
-- the local API server on `http://127.0.0.1:8787`
+- frontend: `http://localhost:5173`
+- backend API: `http://127.0.0.1:8787`
 
-If you want to run them separately:
+Then:
+
+1. open the frontend URL
+2. load the PRECLUDE demo source or paste your own source text
+3. click `Extract`
+4. review the fields
+5. click `Save Draft`
+
+## Environment
+
+The API now loads `.env` automatically via `dotenv`.
+
+Available settings:
 
 ```bash
-npm run dev:api
-npm run dev
+PORT=8787
+EASY_FEVIR_EXTRACTION_MODE=auto
+EASY_FEVIR_LOG_DIR=logs
+EASY_FEVIR_DATA_DIR=data
+OPENAI_MODEL=gpt-5-mini
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_API_KEY=
 ```
 
-Then open the local Vite URL shown in the terminal.
+Modes:
 
-## Extraction modes
+- `auto`: use OpenAI when configured, otherwise use heuristics
+- `openai`: attempt OpenAI first, then fall back if the call fails
+- `heuristic`: skip OpenAI entirely
 
-The frontend contract stays the same:
+If `OPENAI_API_KEY` is empty, the app still works with the heuristic extractor.
+
+## Scripts
+
+```bash
+npm run dev
+npm run dev:api
+npm run dev:full
+npm run typecheck
+npm run build
+npm run preview
+```
+
+## API
+
+Extraction routes:
 
 - `POST /api/v1/extract`
 - `POST /api/v1/regenerate-field`
 
-Draft persistence is now available through:
+Draft persistence routes:
 
 - `POST /api/v1/drafts`
-- `GET /api/v1/drafts/latest`
 - `GET /api/v1/drafts`
+- `GET /api/v1/drafts/latest`
 - `GET /api/v1/drafts/:id`
 
-The backend can run in three modes via `EASY_FEVIR_EXTRACTION_MODE`:
+Health route:
 
-- `auto` (default): use OpenAI when configured, otherwise fall back to the heuristic engine
-- `openai`: attempt OpenAI first and still fall back to heuristics if the model call fails
-- `heuristic`: skip the model and use only the local heuristic engine
+- `GET /api/health`
 
-Set these environment variables before starting the API server if you want LLM-backed extraction:
+## Local Data
 
-```bash
-export OPENAI_API_KEY=...
-export OPENAI_MODEL=gpt-5-mini
-export EASY_FEVIR_EXTRACTION_MODE=auto
+This repo keeps the current prototype simple:
+
+- draft persistence is file-backed and stored under `data/`
+- extraction quality logs are written under `logs/`
+
+These generated files are ignored by git and are recreated automatically.
+
+## Project Docs
+
+- [Architecture](./easy-fevir-architecture.md)
+- [Roadmap](./easy-fevir-roadmap.md)
+- [API Contract](./easy-fevir-api-contract.md)
+- [Frontend Breakdown](./easy-fevir-frontend-breakdown.md)
+- [MVP Wireframe](./easy-fevir-mvp-wireframe.md)
+
+## Project Layout
+
+```text
+src/       frontend app
+server/    local API and persistence
+shared/    shared types and extraction models
 ```
-
-Optional overrides:
-
-```bash
-export OPENAI_BASE_URL=https://api.openai.com/v1
-export EASY_FEVIR_LOG_DIR=logs
-```
-
-The OpenAI path requires structured JSON output for all 8 FEvIR draft fields plus grounded snippets. If parsing or the model call fails, the API falls back to the existing heuristic engine so the frontend flow still works.
-
-## Build
-
-```bash
-npm run build
-```
-
-The production build output is written to:
-
-- [dist](/Users/bilelUser/ness/dist)
 
 ## Notes
 
-- The default extraction path is a conservative local heuristic engine.
-- The frontend calls a tiny local backend with stable routes:
-  - `POST /api/v1/extract`
-  - `POST /api/v1/regenerate-field`
-- Drafts are now saved through the backend API instead of browser-only local storage.
-- The current persistence store is file-backed for the prototype and writes to [data/drafts.json](/Users/bilelUser/ness/data/drafts.json).
-- The extraction layer now supports an OpenAI prompt pipeline with strict structured output plus heuristic fallback.
-- Request and response quality events are logged to [logs/llm-extraction-events.jsonl](/Users/bilelUser/ness/logs/llm-extraction-events.jsonl) for prompt iteration.
-- The heuristic extraction logic remains shared so fallback responses stay aligned with the frontend contract.
-- This is an MVP workflow prototype, not a production FEvIR editor.
+- this is still an MVP, not a production FEvIR editor
+- the current persistence layer should be replaced with Postgres in the next phase
+- the repo does not include local reference files used during development
+
+## License
+
+[MIT](./LICENSE)

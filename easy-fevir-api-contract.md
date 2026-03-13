@@ -6,8 +6,8 @@ This document defines the backend contract for the Easy FEvIR MVP.
 
 The contract is designed to support the frontend described in:
 
-- [easy-fevir-mvp-wireframe.md](/Users/bilelUser/ness/easy-fevir-mvp-wireframe.md)
-- [easy-fevir-frontend-breakdown.md](/Users/bilelUser/ness/easy-fevir-frontend-breakdown.md)
+- [easy-fevir-mvp-wireframe.md](./easy-fevir-mvp-wireframe.md)
+- [easy-fevir-frontend-breakdown.md](./easy-fevir-frontend-breakdown.md)
 
 The MVP backend should do two things well:
 
